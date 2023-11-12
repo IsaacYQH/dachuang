@@ -30,7 +30,7 @@ tvpqr <- function(Y,X,Xout=NULL,bt_init=NULL,mode="qr",p=0.5,tvp="dhs",sv=FALSE,
   }
   if(!is.null(Xout)){
     if(nrow(Xout)!=fhorz) stop("Check size of 'Xout' and desired forecast horizon 'fhorz'.")
-  # add
+    # add
   }else{
     if(fhorz>0){
       stop("Require Xout to forcast")
@@ -53,7 +53,7 @@ tvpqr <- function(Y,X,Xout=NULL,bt_init=NULL,mode="qr",p=0.5,tvp="dhs",sv=FALSE,
     alpha <- 0
     iota <- matrix(1,T,1)
   }
-
+  
   # horseshoe prior setup
   D <- 1
   XtX <- build_XtX(X)
@@ -146,7 +146,7 @@ tvpqr <- function(Y,X,Xout=NULL,bt_init=NULL,mode="qr",p=0.5,tvp="dhs",sv=FALSE,
       alph_V <- solve(crossprod(X_new) + 1/10)
       alph_a <- alph_V %*% crossprod(X_new,y_new)
       alpha <- as.numeric(alph_a + t(chol(alph_V))%*%rnorm(1))
-    
+      
       X_new <- X*norm
       y_new <- (Y-theta*v-iota*alpha)*norm
     }else{
@@ -292,22 +292,24 @@ tvpqr <- function(Y,X,Xout=NULL,bt_init=NULL,mode="qr",p=0.5,tvp="dhs",sv=FALSE,
           sig2fc <- sig2[T,]
           fcstsig2_store[in.thin,] <- sig2fc
         }
-      
+        
         bfc[1,] <- bt[T,] + exp(bvt/2)*rnorm(K,0,1)
         yfc[1] <- Xout[1,]%*%bfc[1,]
-        for(hh in 2:fhorz){
-          if(pred.dsp){
-            if(tvp=="dhs"){
-              bvt <- dhs_se_para[,1] + dhs_se_para[,2]*(bvt-dhs_se_para[,1]) + log(LaplacesDemon::rinvbeta(K,1/2,1/2))
-            }
-            if(tvp=="shs"){
-              bvt <- (1/rgamma(K,0.5,1/(1/rgamma(K,0.5,1)))) * tau.shs # sample from the prior
-              bvt[bvt>1] <- 1
-              bvt <- log(bvt)
+        if(fhorz>1){
+          for(hh in 2:fhorz){
+            if(pred.dsp){
+              if(tvp=="dhs"){
+                bvt <- dhs_se_para[,1] + dhs_se_para[,2]*(bvt-dhs_se_para[,1]) + log(LaplacesDemon::rinvbeta(K,1/2,1/2))
+              }
+              if(tvp=="shs"){
+                bvt <- (1/rgamma(K,0.5,1/(1/rgamma(K,0.5,1)))) * tau.shs # sample from the prior
+                bvt[bvt>1] <- 1
+                bvt <- log(bvt)
+              } 
             } 
-          } 
-          bfc[hh,] <- bfc[hh-1,] + exp(bvt/2)*rnorm(K,0,1)
-          yfc[hh] <- Xout[hh,] %*% bfc[hh,] + alpha
+            bfc[hh,] <- bfc[hh-1,] + exp(bvt/2)*rnorm(K,0,1)
+            yfc[hh] <- Xout[hh,] %*% bfc[hh,] + alpha
+          }
         }
         fcst_store[in.thin,] <- yfc
       }
@@ -322,7 +324,7 @@ tvpqr <- function(Y,X,Xout=NULL,bt_init=NULL,mode="qr",p=0.5,tvp="dhs",sv=FALSE,
 }
 
 tvpqr.grid <- function(Y,X,Xout=NULL,p=seq(0.05,0.95,by=0.05),cpu=1,tvp="dhs",sv=TRUE,cons.cons=FALSE,fhorz=0,
-                      nburn=1000,nsave=1000,thinfac=1,out="mcmc",pred.dsp=F,pred.sv=F){
+                       nburn=1000,nsave=1000,thinfac=1,out="mcmc",pred.dsp=F,pred.sv=F){
   K <- NCOL(X)
   T <- NROW(Y)
   
@@ -345,19 +347,19 @@ tvpqr.grid <- function(Y,X,Xout=NULL,p=seq(0.05,0.95,by=0.05),cpu=1,tvp="dhs",sv
     p.list <- list()
     for(pp in 1:P){
       p.list[[pp]] <- tvpqr(Y=Y,X=X,Xout=Xout,mode="qr",p=p.grid[pp],tvp=tvp,sv=sv,cons.cons=cons.cons,
-                           nburn=nburn,nsave=nsave,thinfac=thinfac,quiet=FALSE,
-                           fhorz = fhorz,pred.dsp=pred.dsp,pred.sv=pred.sv)
+                            nburn=nburn,nsave=nsave,thinfac=thinfac,quiet=FALSE,
+                            fhorz = fhorz,pred.dsp=pred.dsp,pred.sv=pred.sv)
     }
   }else{
     p.list <- foreach(pp = 1:P,
                       .packages = c("GIGrvg","Rcpp","Matrix","MASS","spam","pgdraw","FFBS","JPR"),
                       .export=ls(.GlobalEnv),
-                      .noexport = c("nburn", "nsave", "sv", "thinfac", "Y", "X"),
+                      .noexport = c("nburn", "nsave", "sv", "thinfac", "Y", "X", "Xout"),
                       .verbose = TRUE) %dopar% {
-      tvpqr(Y=Y,X=X,Xout=Xout,mode="qr",p=p.grid[pp],tvp=tvp,sv=sv,
-           nburn=nburn,nsave=nsave,thinfac=thinfac,quiet=FALSE,
-           fhorz = fhorz,pred.dsp=pred.dsp,pred.sv=pred.sv)
-    }
+                        tvpqr(Y=Y,X=X,Xout=Xout,mode="qr",p=p.grid[pp],tvp=tvp,sv=sv,
+                              nburn=nburn,nsave=nsave,thinfac=thinfac,quiet=FALSE,
+                              fhorz = fhorz,pred.dsp=pred.dsp,pred.sv=pred.sv)
+                      }
   }
   message("Finished estimation. Starting post-processing.")
   
@@ -366,7 +368,7 @@ tvpqr.grid <- function(Y,X,Xout=NULL,p=seq(0.05,0.95,by=0.05),cpu=1,tvp="dhs",sv
   sig2_store <- array(NA,dim=c(nsave,P,T))
   dimnames(bt_store) <- list(paste0("mcmc",1:nsave),paste0("p",p*100),NULL,NULL)
   dimnames(sig2_store) <- list(paste0("mcmc",1:nsave),paste0("p",p*100),NULL)
-
+  
   for(pp in 1:P){
     bt_store[,paste0("p",p.grid[pp]*100),,] <- p.list[[pp]]$bt
     sig2_store[,paste0("p",p.grid[pp]*100),] <- p.list[[pp]]$sig2
