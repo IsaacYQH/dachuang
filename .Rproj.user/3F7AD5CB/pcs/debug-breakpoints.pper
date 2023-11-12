@@ -1,0 +1,36 @@
+{
+    "debugBreakpointsState": {
+        "breakpoints": [
+            {
+                "id": 0,
+                "path": "D:/Code_Factory/大创/!qrdhs.R",
+                "line_number": 298,
+                "function_steps": "50,4,6,3,7,3,9",
+                "function_name": "tvpqr",
+                "state": 1,
+                "editor_state": 1,
+                "editor_line_number": 298,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": true,
+                "type": 0,
+                "is_package_breakpoint": false,
+                "package_name": ""
+            },
+            {
+                "id": 1,
+                "path": "D:/Code_Factory/大创/!qrdhs.R",
+                "line_number": 266,
+                "function_steps": "50,4,6,3,7",
+                "function_name": "tvpqr",
+                "state": 1,
+                "editor_state": 1,
+                "editor_line_number": 266,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": true,
+                "type": 0,
+                "is_package_breakpoint": false,
+                "package_name": ""
+            }
+        ]
+    }
+}

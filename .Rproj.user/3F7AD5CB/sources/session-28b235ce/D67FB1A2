@@ -1,0 +1,27 @@
+{
+    "id": "D67FB1A2",
+    "path": "D:/Code_Factory/大创/dsp_aux.R",
+    "project_path": "dsp_aux.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1699774472155.0,
+    "source_on_save": false,
+    "relative_order": 7,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "428,32",
+        "scrollLine": "0",
+        "notebook_format": "html_document"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1686834534,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1686834534,
+    "read_only": false,
+    "read_only_alternatives": []
+}
