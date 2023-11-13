@@ -14,7 +14,7 @@ data_raw <- read_excel("CPI_20231030.xlsx",
                                      "numeric", "numeric", "numeric"))
 
 #data processing
-trnct <- T
+trnct <- F
 if(trnct){
   start = which(as.Date(data_raw$Dates)=="2014-10-01")
   end = which(as.Date(data_raw$Dates)=="2023-09-01")
@@ -38,14 +38,14 @@ colNum <- 3
 if(simu){
   fhorz <- 10
   Xout <- as.matrix(cbind(intercept=rep(1,fhorz), 
-                          data[(nrow(data)-fhorz+1):nrow(data),colNum]))
-  X <- as.matrix(cbind(intercept=rep(1,nrow(data)-1-nrow(Xout)), data[2:(nrow(data)-fhorz),colNum]))
+                          data[(nrow(data)-fhorz):(nrow(data)-1),colNum]))
+  X <- as.matrix(cbind(intercept=rep(1,nrow(data)-1-nrow(Xout)), scale(data[1:(nrow(data)-fhorz-1),colNum])))
   Y <- matrix(400*diff(log(unlist(data$CPI)))[1:(nrow(data)-fhorz-1)],ncol=1)
   Yreal <- matrix(400*diff(log(unlist(data$CPI)))[(nrow(data)-fhorz):(nrow(data)-1)],ncol=1)
   T <- nrow(Y) + nrow(Yreal)
 }else{
   Y <- matrix(400*diff(log(unlist(data$CPI))),ncol=1)
-  X <- as.matrix(cbind(intercept=rep(1,nrow(data)-1), data[-1,colNum]))
+  X <- as.matrix(cbind(intercept=rep(1,nrow(data)-1), data[-nrow(data),colNum]))
   T <- nrow(Y)
 }
 
@@ -116,10 +116,18 @@ for(sv in c(FALSE)){
   sig2_store <- est$sig2
   fcst <- est$fcst
   fcstsig2 <- est$fcstsig2
+  # if(sv){
+  #   quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+  # }else{
+  #   quant_store["UC-QR",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+  # }
   if(sv){
-    quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    # quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    quant_store["UC-QR-SV",,] <- apply(apply(apply(bt_store,c(2,3,4),remove_outliers),
+                                             c(2,3,4),mean,na.rm=TRUE),1,function(x){rowSums(x*X)})
   }else{
-    quant_store["UC-QR",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    quant_store["UC-QR",,] <- apply(apply(apply(bt_store,c(2,3,4),remove_outliers),
+                                          c(2,3,4),mean,na.rm=TRUE),1,function(x){rowSums(x*X)})
   }
   rm(est, bt_store, sig2_store)
 }
