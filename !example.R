@@ -116,10 +116,18 @@ for(sv in c(FALSE)){
   sig2_store <- est$sig2
   fcst <- est$fcst
   fcstsig2 <- est$fcstsig2
+  # if(sv){
+  #   quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+  # }else{
+  #   quant_store["UC-QR",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+  # }
   if(sv){
-    quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    # quant_store["UC-QR-SV",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    quant_store["UC-QR-SV",,] <- apply(apply(apply(bt_store,c(2,3,4),remove_outliers),
+                                             c(2,3,4),mean,na.rm=TRUE),1,function(x){rowSums(x*X)})
   }else{
-    quant_store["UC-QR",,] <- t(apply(apply(bt_store,c(2,3),remove_outliers),c(2,3),mean,na.rm=TRUE))
+    quant_store["UC-QR",,] <- apply(apply(apply(bt_store,c(2,3,4),remove_outliers),
+                                          c(2,3,4),mean,na.rm=TRUE),1,function(x){rowSums(x*X)})
   }
   rm(est, bt_store, sig2_store)
 }
